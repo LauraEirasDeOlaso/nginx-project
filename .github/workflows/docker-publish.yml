@@ -1,0 +1,35 @@
+name: Publish Docker Image
+
+on:
+  push:
+    tags:
+      - 'v*'   # Esto asegura que el workflow se ejecute solo cuando empujas un tag que comience con "v"
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Paso 1: Checkout del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Paso 2: Iniciar sesión en Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Paso 3: Construir la imagen Docker
+      - name: Build Docker image
+        run: |
+          TAG="${GITHUB_REF##*/}"  # Esto extrae el nombre del tag desde GITHUB_REF
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/custom_nginx:$TAG .
+
+      # Paso 4: Subir la imagen Docker a Docker Hub
+      - name: Push Docker image
+        run: |
+          TAG="${GITHUB_REF##*/}"  # Nuevamente obtenemos el tag
+          docker push ${{ secrets.DOCKER_USERNAME }}/custom_nginx:$TAG
+
